@@ -17,17 +17,39 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [userType, setUserType] = useState("user")
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    // In a real app, you would handle authentication here
-
-    // Redirect based on user type
-    if (userType === "user") {
-      router.push("/dashboard")
-    } else {
-      router.push("/owner/dashboard")
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+  
+    const email = (document.getElementById("email") as HTMLInputElement).value;
+    const password = (document.getElementById("password") as HTMLInputElement).value;
+  
+    try {
+      const res = await fetch("http://localhost:5000/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+  
+      const data = await res.json();
+  
+      if (res.ok) {
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("userRole", data.user.role); // Store role for redirection
+  
+        if (data.user.role === "user") {
+          router.push("/dashboard");
+        } else {
+          router.push("/owner/dashboard");
+        }
+      } else {
+        alert(data.message || "Login failed!");
+      }
+    } catch (error) {
+      console.error("Login Error:", error);
+      alert("Server error. Please try again later.");
     }
-  }
+  };
+  
 
   return (
     <div className="container flex items-center justify-center min-h-[calc(100vh-8rem)] py-12">
